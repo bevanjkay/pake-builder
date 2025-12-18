@@ -2,5 +2,6 @@
     "token": "t3-chat",
     "name": "T3 Chat",
     "url": "https://t3.chat",
-    "version": "1.0.3"
+    "version": "1.0.4",
+    "wasm": true
 }
