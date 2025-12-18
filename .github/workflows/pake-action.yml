@@ -45,6 +45,24 @@ jobs:
             echo "EOF"
           } >> "$GITHUB_OUTPUT"
 
+      - name: Cache Pake dependencies
+        uses: actions/cache@9255dc7a253b0ccc959486e2bca901246202afeb
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            ~/.pake
+          key: ${{ runner.os }}-pake-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-pake-
+
+      - name: Cache Build Artifacts
+        uses: actions/cache@9255dc7a253b0ccc959486e2bca901246202afeb
+        with:
+          path: |
+            *.dmg
+          key: pake-artifacts-${{ github.sha }}
+
       - name: Process Applications
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -76,14 +94,19 @@ jobs:
             
             echo "Building $name ($token) v$version from $url"
             
-            # Build using pake
-            pake "$url" --name "$name"
+            dmg_file="${name}.dmg"
+            
+            if [ -f "$dmg_file" ]; then
+              echo "Artifact $dmg_file found in cache. Skipping build."
+            else
+              # Build using pake
+              pake "$url" --name "$name"
+            fi
             
             # If release is requested
             if [ "$SHOULD_RELEASE" = true ]; then
               tag_name="${token}-${version}"
               release_title="${name} v${version}"
-              dmg_file="${name}.dmg"
               
               if [ ! -f "$dmg_file" ]; then
                 echo "Warning: $dmg_file not found, searching for any .dmg file..."
