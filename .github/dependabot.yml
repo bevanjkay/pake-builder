@@ -1,0 +1,17 @@
+---
+version: 2
+updates:
+- package-ecosystem: github-actions
+  directory: "/"
+  schedule:
+    interval: daily
+  cooldown:
+    default-days: 7
+  allow:
+  - dependency-type: all
+  ignore:
+  - dependency-name: actions/stale
+  groups:
+    artifacts:
+      patterns:
+      - actions/*-artifact

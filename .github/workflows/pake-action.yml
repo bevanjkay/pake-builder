@@ -1,0 +1,119 @@
+name: Pake Build and Release
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, labeled]
+    paths:
+      - 'applications/**'
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  build-and-release:
+    runs-on: macos-latest
+    if: |
+      github.event.action != 'labeled' ||
+      (github.event.action == 'labeled' && github.event.label.name == 'create-release')
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Install Pake
+        run: |
+          brew tap bevanjkay/formulae
+          brew install pake
+
+      - name: Get changed files
+        id: changed-files
+        env:
+          BASE_REF: ${{ github.base_ref }}
+        run: |
+          git fetch origin "$BASE_REF"
+          files=$(git diff --name-only "origin/$BASE_REF" HEAD | grep '^applications/.*\.json$' || true)
+          echo "Changed files:"
+          echo "$files"
+          
+          # Handle multiline output
+          {
+            echo "files<<EOF"
+            echo "$files"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Process Applications
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          FILES: ${{ steps.changed-files.outputs.files }}
+        run: |
+          if [ -z "$FILES" ]; then
+            echo "No application JSON files changed."
+            exit 0
+          fi
+          
+          SHOULD_RELEASE=false
+          if [[ "${{ contains(github.event.pull_request.labels.*.name, 'create-release') }}" == "true" ]]; then
+            SHOULD_RELEASE=true
+          fi
+          
+          echo "Release mode: $SHOULD_RELEASE"
+          
+          # Loop through each changed file
+          echo "$FILES" | while IFS= read -r file; do
+            if [ -z "$file" ]; then continue; fi
+            
+            echo "Processing $file..."
+            
+            # Parse JSON content
+            token=$(jq -r '.token' "$file")
+            name=$(jq -r '.name' "$file")
+            url=$(jq -r '.url' "$file")
+            version=$(jq -r '.version' "$file")
+            
+            echo "Building $name ($token) v$version from $url"
+            
+            # Build using pake
+            pake "$url" --name "$name"
+            
+            # If release is requested
+            if [ "$SHOULD_RELEASE" = true ]; then
+              tag_name="${token}-${version}"
+              release_title="${name} v${version}"
+              dmg_file="${name}.dmg"
+              
+              if [ ! -f "$dmg_file" ]; then
+                echo "Warning: $dmg_file not found, searching for any .dmg file..."
+                dmg_file=$(find . -maxdepth 1 -name "*.dmg" | head -n 1)
+              fi
+              
+              if [ -f "$dmg_file" ]; then
+                echo "Found artifact: $dmg_file"
+                
+                # Create release and upload asset
+                # We use '|| true' to prevent failure if release already exists, 
+                # but ideally we should check or handle it. 
+                # 'gh release create' will fail if tag exists.
+                
+                if gh release view "$tag_name" >/dev/null 2>&1; then
+                  echo "Release $tag_name already exists. Uploading asset to existing release..."
+                  gh release upload "$tag_name" "$dmg_file" --clobber
+                else
+                  echo "Creating new release $tag_name..."
+                  gh release create "$tag_name" "$dmg_file" --title "$release_title" --generate-notes
+                fi
+              else
+                echo "Error: Could not find built .dmg file for $name"
+                exit 1
+              fi
+            fi
+          done
+          
+          # Merge PR if release was successful
+          if [ "$SHOULD_RELEASE" = true ]; then
+            echo "Merging Pull Request..."
+            gh pr merge "${{ github.event.pull_request.number }}" --merge --delete-branch
+          fi
