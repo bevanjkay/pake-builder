@@ -1,0 +1,7 @@
+{
+    "token": "gateway-community-hub",
+    "name": "Gateway Community Hub",
+    "url": "https://hub.gc.org.au",
+    "version": "1.0.0",
+    "flags": "--fullscreen --hide-title-bar --inject ./applications/hub.js"
+}
