@@ -91,6 +91,7 @@ jobs:
             name=$(jq -r '.name' "$file")
             url=$(jq -r '.url' "$file")
             version=$(jq -r '.version' "$file")
+            wasm=$(jq -r '.wasm // false' "$file")
             
             echo "Building $name ($token) v$version from $url"
             
@@ -100,7 +101,11 @@ jobs:
               echo "Artifact $dmg_file found in cache. Skipping build."
             else
               # Build using pake
-              pake "$url" --name "$name"
+              if [ "$wasm" = "true" ]; then
+                pake "$url" --name "$name" --app-version "$version" --wasm
+              else
+                pake "$url" --name "$name" --app-version "$version"
+              fi
             fi
             
             # If release is requested
