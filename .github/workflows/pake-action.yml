@@ -23,10 +23,15 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
+      - uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061
+        name: Install pnpm
+        with:
+          version: 9
+
       - name: Install Pake
         run: |
-          brew tap bevanjkay/formulae
-          brew install pake
+          pnpm install -g pake-cli
+          rustup target add x86_64-apple-darwin
 
       - name: Get changed files
         id: changed-files
@@ -104,7 +109,7 @@ jobs:
               echo "Artifact $dmg_file found in cache. Skipping build."
             else
               # Build using pake
-              pake "$url" --name "$name" --app-version "$version" $flags
+              pake "$url" --name "$name" --multi-arch --app-version "$version" $flags
             fi
             
             # If release is requested
