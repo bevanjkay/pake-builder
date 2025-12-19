@@ -28,6 +28,17 @@ jobs:
         with:
           version: 9
 
+      - name: Cache Pake dependencies
+        uses: actions/cache@9255dc7a253b0ccc959486e2bca901246202afeb
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            ~/.pake
+          key: ${{ runner.os }}-pake-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-pake-
+
       - name: Install Pake
         run: |
           pnpm install -g pake-cli
@@ -49,17 +60,6 @@ jobs:
             echo "$files"
             echo "EOF"
           } >> "$GITHUB_OUTPUT"
-
-      - name: Cache Pake dependencies
-        uses: actions/cache@9255dc7a253b0ccc959486e2bca901246202afeb
-        with:
-          path: |
-            ~/.cargo/registry
-            ~/.cargo/git
-            ~/.pake
-          key: ${{ runner.os }}-pake-${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os }}-pake-
 
       - name: Cache Build Artifacts
         uses: actions/cache@9255dc7a253b0ccc959486e2bca901246202afeb
