@@ -1,0 +1,7 @@
+{
+    "token": "gateway-fluro-checking",
+    "name": "Gateway Fluro Checkin",
+    "url": "https://checkin-gc.fluro.io",
+    "version": "1.0.0",
+    "flags": "--force-internal-navigation --hide-title-bar"
+}
