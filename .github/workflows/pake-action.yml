@@ -6,13 +6,34 @@ on:
     paths:
       - 'applications/**'
 
-permissions:
-  contents: write
-  pull-requests: write
+permissions: {}
 
 jobs:
+  validate:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          persist-credentials: false
+
+      - name: Validate application JSON files
+        run: |
+          set -euo pipefail
+
+          for file in applications/*.json; do
+            echo "Validating $file..."
+            jq -e '.token and .name and .url and .version' "$file" > /dev/null
+          done
+
   build-and-release:
+    needs: validate
     runs-on: macos-latest
+    permissions:
+      contents: write
+      pull-requests: write
     if: |
       github.event.action != 'labeled' ||
       (github.event.action == 'labeled' && github.event.label.name == 'create-release')
@@ -35,7 +56,7 @@ jobs:
             ~/.cargo/registry
             ~/.cargo/git
             ~/.pake
-          key: ${{ runner.os }}-pake-${{ github.sha }}
+          key: ${{ runner.os }}-pake-${{ hashFiles('applications/*.json') }}
           restore-keys: |
             ${{ runner.os }}-pake-
 
@@ -66,13 +87,15 @@ jobs:
         with:
           path: |
             *.dmg
-          key: pake-artifacts-${{ github.sha }}
+          key: pake-artifacts-${{ hashFiles('applications/*.json') }}
 
       - name: Process Applications
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           FILES: ${{ steps.changed-files.outputs.files }}
         run: |
+          set -euo pipefail
+
           if [ -z "$FILES" ]; then
             echo "No application JSON files changed."
             exit 0
@@ -86,7 +109,7 @@ jobs:
           echo "Release mode: $SHOULD_RELEASE"
           
           # Loop through each changed file
-          echo "$FILES" | while IFS= read -r file; do
+          while IFS= read -r file; do
             if [ -z "$file" ]; then continue; fi
             
             echo "Processing $file..."
@@ -143,7 +166,7 @@ jobs:
                 exit 1
               fi
             fi
-          done
+          done <<< "$FILES"
           
           # Merge PR if release was successful
           if [ "$SHOULD_RELEASE" = true ]; then
