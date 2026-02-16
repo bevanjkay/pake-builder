@@ -47,7 +47,6 @@ const refresh = () => {
         }
         setBody();
         window.location.href = target;
-        setTimeout(addMenu, 5000);
     } else {
         setTimeout(refresh, checkTime);
     }
@@ -130,6 +129,10 @@ const addCss = () => {
 }
 
 const addMenu = () => {
+    if (document.querySelector('.inject-menu')) {
+        return;
+    }
+
     // Create the parent div element with class "inject-menu"
     const injectMenuDiv = document.createElement('div');
     injectMenuDiv.classList.add('inject-menu');
@@ -187,6 +190,26 @@ const addMenu = () => {
     })
 }
 
-setTimeout(addMenu, 5000);
-setTimeout(addCss, 4000);
+const runWhenReady = (fn, retries = 10, delay = 500) => {
+    const attempt = () => {
+        if (document.body && document.head) {
+            fn();
+            return;
+        }
+
+        if (retries > 0) {
+            setTimeout(() => runWhenReady(fn, retries - 1, delay), delay);
+        }
+    };
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', attempt, { once: true });
+        return;
+    }
+
+    attempt();
+};
+
+runWhenReady(addCss);
+runWhenReady(addMenu);
 
