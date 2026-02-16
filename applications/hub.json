@@ -2,6 +2,6 @@
     "token": "gateway-community-hub",
     "name": "Gateway Community Hub",
     "url": "https://hub.gc.org.au",
-    "version": "1.1.1",
-    "flags": "--always-on-top --force-internal-navigation --fullscreen --hide-title-bar --inject ./applications/hub.js"
+    "version": "1.1.2",
+    "flags": "--always-on-top --debug --force-internal-navigation --fullscreen --hide-title-bar --inject ./applications/hub.js"
 }
