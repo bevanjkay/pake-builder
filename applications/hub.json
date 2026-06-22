@@ -1,7 +1,7 @@
 {
-    "token": "gateway-community-hub",
-    "name": "Gateway Community Hub",
-    "url": "https://hub.gc.org.au",
-    "version": "1.2.1",
+    "token": "reside-info-hub",
+    "name": "Reside Info Hub",
+    "url": "https://info.reside.church",
+    "version": "2.0.0",
     "flags": "--always-on-top --debug --force-internal-navigation --fullscreen --hide-title-bar --inject ./applications/hub.js"
 }
