@@ -1,7 +1,7 @@
 
 let time = new Date().getTime();
 
-const target = "https://hub.gc.org.au/";
+const target = "https://info.reside.church/";
 
 const seconds = (num) => {
     return num * 1000;
