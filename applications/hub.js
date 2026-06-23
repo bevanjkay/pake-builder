@@ -70,7 +70,7 @@ const addCss = () => {
         -o-transition: all 0.5s ease-out;
         -ms-transition: all 0.5s ease-out;
         width: 150px;
-        background-color: #16a697;
+        background-color: #1f2338;
         height: 150px;
         border-radius: 0 20px 20px 0;
         z-index: 9999999999999999999;
