@@ -2,6 +2,6 @@
     "token": "reside-info-hub",
     "name": "Reside Info Hub",
     "url": "https://info.reside.church",
-    "version": "2.0.0",
-    "flags": "--always-on-top --debug --force-internal-navigation --fullscreen --hide-title-bar --inject ./applications/hub.js"
+    "version": "2.0.1",
+    "flags": "--always-on-top --debug --icon https://reside.church/wp-content/uploads/2026/05/cropped-ResidePin-192x192.png --force-internal-navigation --fullscreen --hide-title-bar --inject ./applications/hub.js"
 }
